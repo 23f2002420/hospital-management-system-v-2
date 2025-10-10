@@ -1,0 +1,44 @@
+ 
+====decorators ===
+
+@admin_required
+@doctor_required
+@patient_required
+
+
+=== Routers ===
+/api/login -> POST
+/api/register -> POST
+/api/doctors  -> GET
+/api/departments -> GET
+
+=== admin-routes ====
+/api/admin/dashboard -> GET  ----> Admin dashboard
+/api/admin/departments -> POST ----> Creating Departments
+/api/admin/doctors -> POST ----> Creating doctors
+/api/admin/doctors -> GET -----> fetch All doctors (list)
+/api/admin/patients -> GET ---->fetch  All patient(list)
+/api/admin/appointments ->GET ---->fetch All appointments
+/api/admin/search -> GET ----> search
+/api/admin/doctors/<int:doctor_id> -> PUT ---> Update doctors  
+/api/admin/patients/<int:patient_id> ->PUT ----> Update patient
+/api/admin/doctors/<int:doctor_id> ->DELETE ---> Delete doctors
+/api/admin/patients/<int:patient_id> ->DELETE ----> Delete patient
+
+
+=== doctor-routes ====
+/api/doctor/appointments -> GET -----> Fetch appointments
+/api/doctor/appointments/<int:appointment_id> -> GET ---->fetch appointments details 
+
+/api/appointments/<int:appointment_id>/complete -> PUT ---> Mark Complete appointments
+/api/patients/<int:patient_id>/history -> GET ----> patient history
+
+/api/doctor/availability -> PUT ----> availability 
+
+====patient-routes =====
+/api/appointments -> POST ----> Book appointments
+/api/appointments/<int:appointment_id> -> GET -- appointments details 
+/api/appointments/<int:appointment_id>/cancel ->PUT ----> Cancel appointment_id
+/api/appointments/<int:appointment_id>/reschedule ->PUT ----> Reschedule appointment
+/api/patient/profile -> GET ----> GET OWN profile
+/api/patient/profile -> PUT ----> Update profile
