@@ -8,7 +8,7 @@ import AdminDashboard from './components/AdminDashboard.vue'
 import ManageDepartment from './components/ManageDepartment.vue'
 import ManageDoctors from './components/ManageDoctors.vue'
 import CreateDoctor from './components/CreateDoctor.vue'
-import setAvailability from './components/setAvailability.vue'
+import setAvailability from './components/SetAvailability.vue'
 import ManagePatient from './components/ManagePatient.vue'
 import ViewAllAppointments from './components/ViewAllAppointments.vue'
 

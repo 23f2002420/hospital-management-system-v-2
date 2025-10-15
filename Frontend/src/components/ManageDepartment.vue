@@ -15,7 +15,12 @@ export default{
                 description: ''
             },
             isLoading: true,
-            error: null
+            error: null,
+            editingDepartmentId:null,
+            editingDepartmentData:{
+                name:'',
+                description: ''
+            }
         }
     },
     async created(){
@@ -47,6 +52,39 @@ export default{
                 this.fetchDepartments();
             }catch(error){
                 alert(error.response?.data?.message || "Failed to create department.")
+            }
+        },
+        editDepartment(department){
+            this.editingDepartmentId = department.id 
+            this.editingDepartmentData = {...department}
+        },
+        cancelEdit(){
+            this.editingDepartmentId = null 
+            this.editingDepartmentData = {name: '', description: ''}
+        },
+        async saveDepartment(departmentId) {
+            try {
+                const token = localStorage.getItem('accessToken')
+                await axios.put(`http://127.0.0.1:5000/api/admin/departments/${departmentId}`, this.editingDepartmentData, {
+                headers: { 'Authorization': `Bearer ${token}` }
+                });
+                this.cancelEdit()
+                this.fetchDepartments()
+            } catch (err) {
+                alert(err.response?.data?.message || "Failed to update department.");
+            }
+        },
+        async deleteDepartment(departmentId){
+            if (confirm("Are you sure you want to delete this department?")){
+                try{
+                    const token = localStorage.getItem('accessToken')
+                    await axios.delete(`http://127.0.0.1:5000/api/admin/departments/${departmentId}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                    this.fetchDepartments()
+                }catch(error){
+                    alert(error.response?.data?.message || "Failed to delete department.")
+                }
             }
         }
     }
@@ -94,8 +132,32 @@ export default{
                             <ul v-if="!isLoading && !error" class="list-group">
                                 <li v-if="departments.length === 0" class="list-group-item">No departments found.</li>
                                 <li v-for="dept in departments" :key="dept.id" class="list-group-item">
-                                <strong>{{ dept.name }}</strong>
-                                <p class="mb-0 text-muted">{{ dept.description }}</p>
+                                    <div v-if="editingDepartmentId !== dept.id">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <strong>{{ dept.name }}</strong>
+                                            <p class="mb-0 text-muted">{{ dept.description }}</p>
+                                        </div>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-warning me-2" @click="editDepartment(dept)">Edit</button>
+                                            <button class="btn btn-sm btn-danger" @click="deleteDepartment(dept.id)">Delete</button>
+                                        </div>
+                                        </div>
+                                    </div>
+                                    <div v-else>
+                                        <div class="mb-2">
+                                            <label class="form-label small">Name</label>
+                                            <input type="text" class="form-control" v-model="editingDepartmentData.name">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small">Description</label>
+                                            <textarea class="form-control" rows="2" v-model="editingDepartmentData.description"></textarea>
+                                        </div>
+                                        <div>
+                                            <button class="btn btn-sm btn-success me-2" @click="saveDepartment(dept.id)">Save</button>
+                                            <button class="btn btn-sm btn-light" @click="cancelEdit">Cancel</button>
+                                        </div>
+                                    </div>
                                 </li>
                             </ul>
                         </div>

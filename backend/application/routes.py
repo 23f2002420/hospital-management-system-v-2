@@ -101,7 +101,34 @@ def get_doctor_schedule(doctor_id):
     ]
     return jsonify(booked_slots),200
 
-
+@app.route('/api/doctors/<int:doctor_id>/details',methods = ['GET'])
+@jwt_required()
+def get_doctor_details(doctor_id):
+    doctor = Doctor.query.get(doctor_id)
+    if not doctor:
+        return jsonify(message = "Doctor not found"),404 
+    doctor_details = {
+        "id":doctor.id,
+        "name":doctor.name,
+        "specialization": doctor.specialization,
+        "department": doctor.department.name,
+        "bio": f"Dr. {doctor.name} is a specialist in {doctor.specialization} with many years of experience in the field, focusing on providing comprehensive patient care.",
+        "experience_years": 20, # Example field
+        "profile_image_url": "https://i.imgur.com/C51m22s.png", # Example field
+        "education": [ # Example list
+            "MBBS from King George's Medical University, Lucknow",
+            "MD in Cardiology from AIIMS, Delhi"
+        ],
+        "languages": ["English", "Hindi"], # Example list
+        "services": [ # Example list
+            "Angiography & Angioplasty",
+            "Echocardiogram (ECHO)",
+            "Pacemaker Implantation",
+            "Heart Failure Management",
+            "Preventive Cardiology"
+        ]
+    }
+    return jsonify(doctor_details),200
 # --admin routes ---
 @app.route('/api/admin/dashboard', methods=['GET'])
 @admin_required()
@@ -126,6 +153,35 @@ def create_department():
     db.session.commit()
     return jsonify(message=f"Department '{new_dept.name}' created successfully"), 201
 
+@app.route('/api/admin/departments/<int:department_id>', methods = ['PUT'])
+@admin_required()
+def update_department(department_id):
+    department = Department.query.get(department_id)
+    if not department:
+        return jsonify(message = "Department not found"),404
+    data = request.get_json()
+    if 'name' in data:
+        department.name = data['name']
+    if 'description' in data:
+        department.description = data['description']
+    db.session.commit()
+    return jsonify(message = f"Department '{department.name}' updated successfully!"),200    
+    
+    
+@app.route('/api/admin/departments/<int:department_id>',methods = ['DELETE'])
+@admin_required()
+def delete_department(department_id):
+    department = Department.query.get(department_id)
+    if not department:
+        return jsonify(message = "Department not found"),404
+    if department.doctors:
+        return jsonify(message = f"Cannot delete department '{department.name}' because it has doctors assigned to it."),409
+    db.session.delete(department)
+    db.session.commit()
+    return jsonify(message = f"Department '{department.name}' deleted successfully."),200
+
+
+
 @app.route('/api/admin/doctors', methods=['POST'])
 @admin_required()
 def create_doctor():
@@ -145,6 +201,39 @@ def create_doctor():
     db.session.add(new_doctor)
     db.session.commit()
     return jsonify(message=f"Doctor '{new_doctor.name}' created successfully"), 201
+
+
+@app.route('/api/admin/doctors/<int:doctor_id>', methods=['PUT'])
+@admin_required()
+def update_doctor(doctor_id):
+    doctor = Doctor.query.get(doctor_id)
+    if not doctor:
+        return jsonify(message="Doctor not found"), 404
+    data = request.get_json()
+    if 'name' in data: 
+        doctor.name = data['name']
+    if 'specialization' in data: 
+        doctor.specialization = data['specialization']
+    if 'department_id' in data:
+        if not Department.query.get(data['department_id']): 
+            return jsonify(message="Department not found"), 404
+        doctor.department_id = data['department_id']
+    db.session.commit()
+    return jsonify(message=f"Doctor {doctor.name}'s profile has been updated."), 200
+
+@app.route('/api/admin/doctors/<int:doctor_id>', methods=['DELETE'])
+@admin_required()
+def delete_doctor(doctor_id):
+    doctor = Doctor.query.get(doctor_id)
+    if not doctor:
+        return jsonify(message="Doctor not found"), 404
+    user = User.query.get(doctor.user_id)
+    db.session.delete(doctor)
+    if user:
+        db.session.delete(user)
+    db.session.commit()
+    return jsonify(message="Doctor profile and user account have been deleted."), 200
+
 
 @app.route('/api/admin/doctors', methods=['GET'])
 @admin_required()
@@ -192,27 +281,11 @@ def search_users():
         return jsonify(message="Invalid role specified. Use 'patient' or 'doctor'."), 400
     return jsonify(results), 200
 
-@app.route('/api/admin/doctors/<int:doctor_id>', methods=['PUT'])
-@admin_required()
-def update_doctor_profile(doctor_id):
-    doctor = Doctor.query.get(doctor_id)
-    if not doctor:
-        return jsonify(message="Doctor not found"), 404
-    data = request.get_json()
-    if 'name' in data: 
-        doctor.name = data['name']
-    if 'specialization' in data: 
-        doctor.specialization = data['specialization']
-    if 'department_id' in data:
-        if not Department.query.get(data['department_id']): 
-            return jsonify(message="Department not found"), 404
-        doctor.department_id = data['department_id']
-    db.session.commit()
-    return jsonify(message=f"Doctor {doctor.name}'s profile has been updated."), 200
+
 
 @app.route('/api/admin/patients/<int:patient_id>', methods=['PUT'])
 @admin_required()
-def update_patient_profile(patient_id):
+def update_patient(patient_id):
     patient = Patient.query.get(patient_id)
     if not patient:
         return jsonify(message="Patient not found"), 404
@@ -224,18 +297,6 @@ def update_patient_profile(patient_id):
     db.session.commit()
     return jsonify(message=f"Patient {patient.name}'s profile has been updated."), 200
 
-@app.route('/api/admin/doctors/<int:doctor_id>', methods=['DELETE'])
-@admin_required()
-def delete_doctor(doctor_id):
-    doctor = Doctor.query.get(doctor_id)
-    if not doctor:
-        return jsonify(message="Doctor not found"), 404
-    user = User.query.get(doctor.user_id)
-    db.session.delete(doctor)
-    if user:
-        db.session.delete(user)
-    db.session.commit()
-    return jsonify(message="Doctor profile and user account have been deleted."), 200
 
 @app.route('/api/admin/patients/<int:patient_id>', methods=['DELETE'])
 @admin_required()
@@ -264,7 +325,7 @@ def get_doctor_appointments():
 
 @app.route('/api/doctor/profile', methods = ['GET'])
 @doctor_required()
-def get_doctor_profile():
+def get_doctor():
     current_user_id = int(get_jwt_identity())
     doctor = Doctor.query.filter_by(user_id = current_user_id).first()
     if not doctor:

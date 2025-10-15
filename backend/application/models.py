@@ -8,10 +8,8 @@ class User(db.Model):
     role = db.Column(db.String(), nullable = False, default = "user")
     doctor = db.relationship('Doctor', backref = "user", uselist = False, cascade = 'all')
     patient = db.relationship('Patient', backref = "user", uselist = False, cascade = 'all')
-
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-        
+        self.password_hash = generate_password_hash(password)    
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
@@ -24,14 +22,14 @@ class Doctor(db.Model):
     availability = db.Column(db.Text, nullable= True)
     
     department_id = db.Column(db.Integer, db.ForeignKey("department.id"), nullable = False)
-    appointments = db.relationship('Appointment', backref = 'doctor', lazy = True)
+    appointments = db.relationship('Appointment', backref = 'doctor', lazy = True, cascade="all, delete-orphan")
     
 class Patient(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable = False, unique = True)
     name = db.Column(db.String, nullable = False)
     profile = db.Column(db.Text)
-    appointments = db.relationship('Appointment', backref = 'patient', lazy = True)
+    appointments = db.relationship('Appointment', backref = 'patient', lazy = True, cascade = "all")
 
 class Appointment(db.Model):
     id = db.Column(db.Integer, primary_key = True)
@@ -40,7 +38,7 @@ class Appointment(db.Model):
     status = db.Column(db.String(), nullable = False)
     doctor_id = db.Column(db.Integer, db.ForeignKey("doctor.id"), nullable = False)
     patient_id = db.Column(db.Integer, db.ForeignKey("patient.id"), nullable = False)
-    treatment = db.relationship('Treatment',backref = 'appointment', uselist = False, cascade = "all")
+    treatment = db.relationship('Treatment',backref = 'appointment', uselist = False, cascade="all")
     
 class Treatment(db.Model):
     id = db.Column(db.Integer, primary_key = True)

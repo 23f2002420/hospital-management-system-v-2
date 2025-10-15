@@ -139,9 +139,6 @@ export default {
                     <router-link :to="{ name: 'DoctorDetails', params: { id: doc.id } }" class="btn btn-sm btn-outline-primary me-2">
                       View Details
                     </router-link>
-                    <router-link :to="{ name: 'BookAppointment', params: { doctorId: doc.id } }" class="btn btn-sm btn-success">
-                      Book Now
-                    </router-link>
                   </div>
                 </div>
               </div>

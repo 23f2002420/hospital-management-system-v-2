@@ -9,6 +9,7 @@ export default {
   },
   data() {
     return {
+      doctorName: '',
       appointments: [],
       loading: true,
       error: null,
@@ -18,29 +19,35 @@ export default {
     upcomingAppointments() {
       return this.appointments
         .filter(appt => appt.status === 'Booked')
-        .sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort by soonest first
+        .sort((a, b) => new Date(a.date) - new Date(b.date))
     },
     pastAppointments() {
       return this.appointments
         .filter(appt => appt.status !== 'Booked')
-        .sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort by most recent first
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
     }
   },
   async created() {
-    this.fetchDoctorAppointments();
+    this.fetchDashboardData()
   },
   methods: {
-    async fetchDoctorAppointments() {
+    async fetchDashboardData() {
       this.loading = true;
       this.error = null;
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await axios.get('http://127.0.0.1:5000/api/doctor/appointments', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        this.appointments = response.data;
+        const headers = { 'Authorization': `Bearer ${token}` }
+        const [profileRes, appointmentsRes] = await Promise.all([
+          axios.get('http://127.0.0.1:5000/api/doctor/profile', { headers }),
+          axios.get('http://127.0.0.1:5000/api/doctor/appointments', { headers })
+        ]);
+
+        // Set the data from the API responses
+        this.doctorName = profileRes.data.name;
+        this.appointments = appointmentsRes.data;
+
       } catch (err) {
-        this.error = 'Failed to fetch your appointments.';
+        this.error = 'Failed to fetch your dashboard data.';
         console.error(err);
       } finally {
         this.loading = false;
@@ -60,7 +67,11 @@ export default {
     <Navbar />
     <main class="container mt-4">
       <header class="p-3 mb-4 bg-light border rounded-3">
-        <h1 class="display-5">Doctor Dashboard</h1>
+        <h1 class="display-5">
+          <span v-if="doctorName">Dr. {{ doctorName }}'s</span>
+          <span v-else>Doctor</span>
+          Dashboard
+        </h1>
         <p class="text-muted">View and manage your patient appointments.</p>
       </header>
       
@@ -113,7 +124,6 @@ export default {
             </div>
           </div>
         </div>
-
       </div>
     </main>
   </div>
