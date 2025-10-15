@@ -30,7 +30,7 @@ export default{
             this.error= null
             try{
                 const token = localStorage.getItem('accessToken')
-                const response = await axios.get(`http://127.0.0.1:5000/api/doctor/appointment/${appointmentId}`,{
+                const response = await axios.get(`http://127.0.0.1:5000/api/doctor/appointment/${id}`,{
                     headers : {'Authorization': `Bearer ${token}`}
                 })
                 this.appointment = response.data
