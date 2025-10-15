@@ -353,6 +353,7 @@ def get_doctor_appointment_details(appointment_id):
     appt_data = {
         "id": appt.id,
         "patient_name": appt.patient.name,
+        "patient_id": appt.patient.id,
         "date": appt.date.strftime('%Y-%m-%d'),
         "time": appt.time.strftime('%H:%M'),
         "status": appt.status,
