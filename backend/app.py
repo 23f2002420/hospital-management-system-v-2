@@ -5,8 +5,7 @@ from application.database import db
 from application.models import *
 from application.security import jwt
 from flask_cors import CORS
-
-
+from application.celery_init import celery_init_app
 app = None
 
 def create_app():
@@ -19,7 +18,10 @@ def create_app():
     return app
 
 app = create_app()
+celery = celery_init_app(app)
+# celery.autodiscover_tasks()
 
+from application import tasks
 from application.routes import *
 
 

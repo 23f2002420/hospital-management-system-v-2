@@ -582,3 +582,33 @@ def update_own_profile():
     db.session.commit()
     return jsonify(message = "Your profile has been updated successfully."),200
 
+
+
+## Advanced Backend Job 
+from celery.result import AsyncResult
+from .tasks import export_treatments_csv, monthly_doctor_report,send_daily_reminders
+
+
+@app.route('/api/patient/export-history', methods = ['POST'])
+@patient_required()
+def trigger_export_history():
+    current_user_id = int(get_jwt_identity())
+    patient = Patient.query.filter_by(user_id = current_user_id).first()
+    
+    if not patient:
+        return jsonify(message = "Patient profile not found."),404 
+    
+    export_treatments_csv.delay(patient.id)
+    return jsonify(message = "Your export has started. You will receive an email with your history shortly."),202 
+
+@app.route('/api/test/trigger-monthly-report', methods=['POST'])
+@admin_required()
+def trigger_monthly_report():
+    monthly_doctor_report.delay()
+    return jsonify(message="Monthly report generation has been manually triggered for testing."), 200
+
+@app.route('/api/test/trigger-daily-reminders', methods=['POST'])
+@admin_required() 
+def trigger_daily_reminders():
+    send_daily_reminders.delay()
+    return jsonify(message="Daily reminder task has been manually triggered for testing."), 200

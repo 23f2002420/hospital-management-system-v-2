@@ -19,8 +19,8 @@ export default{
     },
     methods: {
         async fetchPatientHistory(){
-            this.isLoading = true,
-            this.error = null
+            this.isLoading = true;
+            this.error = null;
             try{
                 const token = localStorage.getItem('accessToken')
                 const response = await axios.get('http://127.0.0.1:5000/api/patient/appointments',{
@@ -35,6 +35,19 @@ export default{
             }finally{
                 this.isLoading = false
             }
+        },
+        async exportHistory(){
+            alert('Starting your export request.');
+            try{
+                const token = localStorage.getItem('accessToken')
+                const response = await axios.post('http://127.0.0.1:5000/api/patient/export-history',{},{
+                    headers: {'Authorization':`Bearer ${token}`}
+                });
+                alert(response.data.message)
+            }catch(error){
+                console.error("Export request failed:",error)
+                alert(error.response?.data?.message || "Failed to start the export process.");
+            }
         }
     }
 }
@@ -46,6 +59,11 @@ export default{
         <main class = "container mt-4">
             <header class = "d-flex justify-content-between align-items-center mb-4">
                 <h1 class = "mb-0">My Medical History</h1>
+                <div>
+                    <button class = "btn btn-success me-2" @click = "exportHistory">
+                        Export as CSV
+                    </button>
+                </div>
                 <router-link to= "/patient" class = "btn btn-secondary">Back to Dashboard</router-link>
             </header>
 
